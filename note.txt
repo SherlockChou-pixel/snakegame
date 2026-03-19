@@ -1,0 +1,42 @@
+套接字
+步骤：
+1.创建套接字。创建“电话机”
+int server_fd = socket(AF_INET, SOCK_STREAM, 0);
+|--AF_INET——IPv4协议
+|--SOCK_STREAM——TCP协议
+
+2.绑定。绑定“电话号码”，当有了电话号码后，别人才能通过这个号码访问
+address.sin_port = htons(PORT); // 设置端口 8888
+bind(server_fd, (struct sockaddr*)&address, sizeof(address));
+
+3.监听。等着别人打电话
+listen(server_fd, 10);
+
+4.接收。电话响了，拿起话筒
+int client_fd = accept(server_fd, (struct sockaddr*)&client_addr, &client_len);
+
+
+epoll
+epoll 是 Linux 下高性能 I/O 多路复用机制，核心优势是内核主动通知就绪文件描述符（fd），无需遍历所有 fd，适配高并发场景
+步骤:
+1.创建实例
+int epfd = epoll_create(1); // 成功返回非负 fd，失败返回 -1
+
+2.注册要监听的 fd 及事件
+struct epoll_event ev;
+ev.data.fd = lfd; // 要监听的 fd（如监听 socket、客户端 socket）
+ev.events = EPOLLIN; // 监听「可读」事件（默认水平触发 LT）
+epoll_ctl(epfd, EPOLL_CTL_ADD, lfd, &ev); // 注册 fd
+·常用操作：EPOLL_CTL_ADD（添加）、EPOLL_CTL_MOD（修改）、EPOLL_CTL_DEL（删除）；
+·常用事件：EPOLLIN（可读）、EPOLLOUT（可写）、EPOLLET（边缘触发）、EPOLLERR（错误）、EPOLLHUP（连接断开）
+
+3.阻塞监听就绪事件
+struct epoll_event events[MAX_EVENTS]; // 存放就绪事件
+// 阻塞等待，返回就绪的 fd 数量（timeout=-1 永久阻塞，0 非阻塞，>0 超时毫秒）
+int n = epoll_wait(epfd, events, MAX_EVENTS, -1);
+
+4.处理就绪事件
+遍历 epoll_wait 返回的就绪事件数组，根据 fd 类型和事件类型处理：
+·监听 fd 就绪：调用 accept 接收新连接，将新客户端 fd 注册到 epoll；
+·客户端 fd 就绪：调用 read/write 处理数据，若连接断开则删除该 fd；
+·错误 / 断开事件：关闭 fd 并从 epoll 中删除

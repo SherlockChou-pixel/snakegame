@@ -1,0 +1,30 @@
+# Build output 此文件可以用来过滤构建过程中生成的文件和目录，避免将它们提交到版本控制系统中。以下是一些常见的构建输出和临时文件的示例：
+/build/
+/bin/
+/CMakeFiles/
+/CMakeCache.txt
+/Makefile
+/Makefile.*
+/cmake_install.cmake
+
+# IDE / editor
+*.swp
+*.swo
+.vscode/
+*.user
+*.userosscache
+*.sln
+*.vcxproj*
+
+# Logs
+*.log
+
+# Generated files
+*.o
+*.obj
+*.exe
+*.out
+
+# Temporary files
+*~
+.DS_Store
