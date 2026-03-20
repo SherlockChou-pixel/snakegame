@@ -8,6 +8,14 @@
 
 int main(int argc, char* argv[])
 {
-    EpollServer server(8888);
+    int port = 8888;
+    EpollServer server(port);
+    server.set_listen(5);
+    std::cout << "=====================================" << std::endl;
+    std::cout << "服务端已启动，持续监听端口 " << port << std::endl;
+    std::cout << "=====================================" << std::endl;
+
+    server.run();
+
     return 0;
 }
