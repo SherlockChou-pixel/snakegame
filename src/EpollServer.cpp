@@ -132,13 +132,21 @@ void EpollServer::run() {
     std::cout << "开始 epoll 循环" << std::endl;
 
     while (running) {
-        int n = epoll_wait(epoll_fd, events.data(), MAX_EVENTS, -1);
+        int n = epoll_wait(epoll_fd, events.data(), MAX_EVENTS, 1000); // 1秒超时，用于响应 stop()
         if (n == -1) {
             if (errno == EINTR) {
                 continue;
             }
             perror("epoll_wait failed");
             break;
+        }
+
+        if (!running) {
+            break;
+        }
+
+        if (n == 0) {
+            continue; // 超时，重新检查 running
         }
 
         for (int i = 0; i < n; ++i) {
