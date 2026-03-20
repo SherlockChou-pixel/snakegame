@@ -27,9 +27,20 @@ Snake::Snake(int _id, int startX, int startY, int _len, Direction _dir, int boar
     std::cout << _id << " 蛇已就绪" << std::endl;
 }
 
+static bool isOpposite(Direction a, Direction b)
+{
+    return (a == Direction::up && b == Direction::down) ||
+           (a == Direction::down && b == Direction::up) ||
+           (a == Direction::left && b == Direction::right) ||
+           (a == Direction::right && b == Direction::left);
+}
+
 void Snake::setDirection(Direction dir)
 {
-    dir_ = dir;
+    if (!isOpposite(dir_, dir)) {
+        dir_ = dir;
+    }
+    // 直接掉头时忽略输入，保持原方向
 }
 
 void Snake::setBoardSize(int w, int h)
@@ -50,12 +61,23 @@ void Snake::move()
 
     if (body_.empty())
         return;
-
+    // 头部坐标
     auto [head_x, head_y] = body_.front();
     auto [dx, dy] = direction[static_cast<int>(dir_)];
 
-    head_x += dx;
-    head_y += dy;
+    // 防止蛇直接掉头（理论上 setDirection 已阻断，作保险）
+    if (body_.size() > 1) {
+        auto [next_x, next_y] = body_[1];
+        if (head_x + dx == next_x && head_y + dy == next_y) {
+            // 直接掉头时仍按原方向前进（不改变 head_x/head_y）
+        } else {
+            head_x += dx;
+            head_y += dy;
+        }
+    } else {
+        head_x += dx;
+        head_y += dy;
+    }
 
     // 边界环绕
     if (boardW_ > 0) {

@@ -10,8 +10,9 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/../snakegame/bin)
 add_executable(ServerTest 
     src/Snake.cpp
     src/main.cpp
+    src/EpollServer.cpp
     # 如果有其他 cpp 文件，继续加在这里
 )
 
-# 链接 pthread 库 (epoll 和多线程通常需要)
+# 链接 pthread 库 (epoll 在 libc 中，无需单独链接库)
 target_link_libraries(ServerTest pthread ncurses)
