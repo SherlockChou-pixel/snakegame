@@ -40,3 +40,22 @@ int n = epoll_wait(epfd, events, MAX_EVENTS, -1);
 ·监听 fd 就绪：调用 accept 接收新连接，将新客户端 fd 注册到 epoll；
 ·客户端 fd 就绪：调用 read/write 处理数据，若连接断开则删除该 fd；
 ·错误 / 断开事件：关闭 fd 并从 epoll 中删除
+
+
+实际游戏架构，可扩展到其它互联网产品
+功能模块化
+网络层->逻辑层->数据层
+1.网络层，只负责网络通信，将接受到的数据给逻辑层
+2.逻辑层，游戏逻辑处理，会对数据进行改动
+3.游戏数据
+
+数据转发层设计思路
+创建一个抽象类作为接口->网络层将收到的数据通过这个接口进行调用(调用前可进行初步筛选，不用处理含义，处理合不合法)
+设计一个子类来对接口进行扩写
+C++11后使用智能指针
+定义:
+std::unique_ptr<IMessageHandler> messageHandler;
+函数:
+void setMessageHandler(std::unique_ptr<IMessageHandler> handler);
+传参：
+setMessageHandler(std::make_unique<TestHandler>());

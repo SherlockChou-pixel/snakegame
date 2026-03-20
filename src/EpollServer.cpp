@@ -6,8 +6,9 @@
 #include <fcntl.h>
 #include <cstring>
 #include <iostream>
-
-EpollServer::EpollServer(int _port): port(_port), server_fd(-1), epoll_fd(-1), running(false) {
+#include "IMessageHandler.h"
+EpollServer::EpollServer(int _port): port(_port), server_fd(-1), epoll_fd(-1), running(false) 
+,messageHandler(nullptr){
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_fd == -1) {
         std::cerr << "创建套接字失败：" << strerror(errno) << std::endl;
@@ -73,9 +74,14 @@ void EpollServer::handle_client_event(int client_fd) {
             close_client(client_fd);
             break;
         } else {
+            if (messageHandler != nullptr) {
+                messageHandler->onMessage(client_fd, buffer, count);
+            }
             ssize_t sent = 0;
             while (sent < count) {
-                ssize_t n = send(client_fd, buffer + sent, count - sent, 0);
+                std::string reply_msg = "射出来了:" + std::string(buffer, count) + "\r\n";
+                ssize_t n =send(client_fd, reply_msg.c_str(), reply_msg.size(), 0);
+
                 if (n == -1) {
                     if (errno == EAGAIN || errno == EWOULDBLOCK) {
                         continue;
@@ -89,7 +95,9 @@ void EpollServer::handle_client_event(int client_fd) {
         }
     }
 }
-
+void EpollServer::setMessageHandler(std::unique_ptr<IMessageHandler> handler) {
+    messageHandler = std::move(handler); // 👈 使用 std::move 转移所有权
+}
 void EpollServer::close_client(int client_fd) {
     std::cout << "客户端断开 fd=" << client_fd << std::endl;
     epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_fd, nullptr);

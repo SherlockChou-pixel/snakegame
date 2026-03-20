@@ -13,7 +13,9 @@
 #include <fcntl.h>      // fcntl, O_NONBLOCK
 #include <errno.h>      // errno, EAGAIN
 #include <netinet/in.h>
-
+#include <memory>
+class IMessageHandler;
+/*网络层 */
 class EpollServer {
 private:
     int port;
@@ -23,7 +25,7 @@ private:
     struct sockaddr_in server_addr;
     static constexpr int MAX_EVENTS = 1024;
     bool running;
-
+    std::unique_ptr<IMessageHandler> messageHandler; 
     int set_nonbl(int fd);
     void handle_client_event(int client_fd);
     void close_client(int client_fd);
@@ -33,6 +35,9 @@ public:
     void set_listen(int backlog = 5);
     void run();
     void stop();
+    //对外暴露接口
+    void setMessageHandler(std::unique_ptr<IMessageHandler> handler);
+    
     ~EpollServer();
 };
 
