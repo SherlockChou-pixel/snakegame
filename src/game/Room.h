@@ -1,29 +1,31 @@
 #ifndef _ROOM_H
 #define _ROOM_H
+
 #include <vector>
 #include <iostream>
-#include <ncurses.h>//非阻塞输出
-#include "Snake.h"
-#include "Food.h"
+#include <ncurses.h>
+
+// 修改处：使用前向声明，移除 #include "Snake.h"
+class Snake; 
+#include "Food.h" // 如果 Food 类没有循环依赖，可以保留，否则也建议前向声明
+
 class Room
 {
 private:
-    
-    int size;//房间容纳人数
-    int width;//地图宽度
-    int height;//地图长度
-    /*初始化一个地图*/
+    int size;
+    int width;
+    int height;
     std::vector<std::string> board;
-    Food* food_;  // 指向食物的指针
+    Food* food_;
 public:
-    Room(int size,int width, int height);
-    /*更新地图位置*/
-    void updateMap(const Snake& snake);
-    /*添加食物*/
+    Room(int size, int width, int height);
+    std::pair<int,int> getRoomSize() const;
+    // 现在 Snake 已声明，可以正常使用引用
+    void updateMap(const Snake& snake); 
     void setFood(Food* food);
+    void eatFood(Snake& snake, Food* food);
     void displayMap() const;
     ~Room();
 };
-
 
 #endif

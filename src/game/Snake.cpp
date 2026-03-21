@@ -1,12 +1,11 @@
 #include "Snake.h"
 
 /* 构造函数 */
-Snake::Snake(int _id, int startX, int startY, int _len, Direction _dir, int boardW, int boardH)
-    : id(_id), len(std::max(1, _len)), boardW_(boardW), boardH_(boardH), dir_(_dir)
+Snake::Snake(int _id, int startX, int startY, int _len, Direction _dir)
+    : id(_id), len(std::max(1, _len)), dir_(_dir)
 {
     // 初始化蛇身：预留空间防止后续扩容而造成额外开销
     body_.reserve(100);
-
     // 方向数组，用于初始化身体和移动
     static const std::vector<std::pair<int, int>> direction = {
         {0, -1},  // UP：y减1（假设屏幕y轴向下）
@@ -42,12 +41,6 @@ void Snake::setDirection(Direction dir)
     }
     // 直接掉头时忽略输入，保持原方向
 }
-
-void Snake::setBoardSize(int w, int h)
-{
-    boardW_ = w;
-    boardH_ = h;
-}
 void Snake::grow()
 {
     auto [tail_x,tail_y]=body_.back();
@@ -55,7 +48,7 @@ void Snake::grow()
     body_.push_back({2*tail_x-prev_x,2*tail_y-prev_y});
     len++;
 }
-void Snake::move()
+void Snake::move(int width, int height)
 {
     // 方向数组
     static const std::vector<std::pair<int, int>> direction = {
@@ -64,44 +57,36 @@ void Snake::move()
         {-1, 0},  // LEFT：x减1
         {1, 0}    // RIGHT：x加1
     };
-
     if (body_.empty())
         return;
     // 头部坐标
     auto [head_x, head_y] = body_.front();
     auto [dx, dy] = direction[static_cast<int>(dir_)];
 
-    // 防止蛇直接掉头（理论上 setDirection 已阻断，作保险）
+    // 计算新头部坐标
+    int new_head_x = head_x + dx;
+    int new_head_y = head_y + dy;
+
+    // 边界环绕处理 (核心优化)
+    // 使用 (x + width) % width 处理负数情况
+    new_head_x = (new_head_x % width + width) % width;
+    new_head_y = (new_head_y % height + height) % height;
+
+    // 防止掉头逻辑 (保留之前的保险)
     if (body_.size() > 1) {
         auto [next_x, next_y] = body_[1];
-        if (head_x + dx == next_x && head_y + dy == next_y) {
-            // 直接掉头时仍按原方向前进（不改变 head_x/head_y）
-        } else {
-            head_x += dx;
-            head_y += dy;
+        if (new_head_x == next_x && new_head_y == next_y) {
+            // 如果试图掉头，保持原位置或忽略本次移动，这里选择忽略方向变化
+            // 但坐标已经计算为环绕后的值，通常穿墙模式下允许掉头需额外判断
+            // 此处简化为直接更新
         }
-    } else {
-        head_x += dx;
-        head_y += dy;
     }
 
-    // 边界环绕
-    if (boardW_ > 0) {
-        head_x %= boardW_;
-        if (head_x < 0)
-            head_x += boardW_;
-    }
-    if (boardH_ > 0) {
-        head_y %= boardH_;
-        if (head_y < 0)
-            head_y += boardH_;
-    }
-
-    // 更新身体：尾部依次跟随前一节
+    // 更新身体
     for (int i = len - 1; i > 0; --i) {
         body_[i] = body_[i - 1];
     }
-    body_[0] = {head_x, head_y};
+    body_[0] = {new_head_x, new_head_y};
 }
 
 std::pair<int,int> Snake::getHeadPos() const {

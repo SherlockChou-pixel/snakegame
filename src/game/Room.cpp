@@ -1,4 +1,6 @@
 #include "Room.h"
+#include "Snake.h"
+
 
 
 Room::Room(int size,int width, int height):size(size),width(width),height(height), food_(nullptr){
@@ -9,7 +11,24 @@ Room::Room(int size,int width, int height):size(size),width(width),height(height
 void Room::setFood(Food* food) {
     food_ = food;
 }
-
+void Room::eatFood(Snake& snake,Food*food)
+{
+    if(food->getPosition()==snake.getHeadPos())
+    {
+        snake.grow();
+        food->generateRandom(width, height, snake.getBody());
+    
+        // 设置食物到房间
+        setFood(food);
+    
+        // 更新地图
+        updateMap(snake);
+    }
+}
+//获取尺寸
+std::pair<int,int> Room::getRoomSize() const {
+    return std::make_pair(width, height);
+}
 void Room::updateMap(const Snake& snake) {
     // 重置地图
     for (auto& row : board) {
