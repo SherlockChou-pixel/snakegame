@@ -9,4 +9,14 @@ public:
     virtual ~IMessageHandler()=default;
 };
 
+
+/*游戏业务处理 */
+class GameMessasgeHandler:public IMessageHandler{
+private:
+
+public:
+    GameMessasgeHandler();
+    void onMessage(int client_fd,const char* buffer,size_t length) override;
+    void onDisconnect(int client_fd) override;
+};
 #endif

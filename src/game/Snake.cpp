@@ -48,7 +48,13 @@ void Snake::setBoardSize(int w, int h)
     boardW_ = w;
     boardH_ = h;
 }
-
+void Snake::grow()
+{
+    auto [tail_x,tail_y]=body_.back();
+    auto [prev_x,prev_y]=body_[len-2];
+    body_.push_back({2*tail_x-prev_x,2*tail_y-prev_y});
+    len++;
+}
 void Snake::move()
 {
     // 方向数组
@@ -98,17 +104,15 @@ void Snake::move()
     body_[0] = {head_x, head_y};
 }
 
-std::pair<int, int> Snake::getHeadPos() const
-{
+std::pair<int,int> Snake::getHeadPos() const {
+    if (body_.empty()) return {-1, -1};
     return body_.front();
 }
 
-const std::vector<std::pair<int, int>>& Snake::getBody() const
-{
+const std::vector<std::pair<int,int>>& Snake::getBody() const {
     return body_;
 }
 
-Snake::~Snake()
-{
-    std::cout << id << " 蛇完了" << std::endl;
+Snake::~Snake() {
+    // 析构函数，如果需要清理资源
 }

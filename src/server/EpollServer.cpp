@@ -142,10 +142,12 @@ void EpollServer::run() {
         }
 
         if (!running) {
+            
             break;
         }
 
         if (n == 0) {
+            std::cout<<"无客户端接通"<<std::endl;
             continue; // 超时，重新检查 running
         }
 
