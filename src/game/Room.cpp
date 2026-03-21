@@ -58,11 +58,33 @@ void Room::updateMap(const Snake& snake) {
     }
 }
 
+// 【核心修改】使用 ncurses 渲染
 void Room::displayMap() const {
-    for (const auto& row : board) {
-        std::cout << row << std::endl;
+    // 清屏 (清除上一帧的内容)
+    clear(); 
+
+    // 遍历逻辑地图板，将其绘制到 ncurses 窗口
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            char ch = board[y][x];
+            
+            // 可选：给不同元素添加颜色 (需要先初始化颜色对)
+            // if (ch == 'H') attron(COLOR_PAIR(1));
+            // if (ch == 'F') attron(COLOR_PAIR(2));
+            
+            // mvaddch(y, x, ch) 将字符 ch 移动到坐标 (y, x) 并绘制
+            mvaddch(y, x, ch);
+            
+            // 如果用了颜色，记得恢复
+            // attroff(COLOR_PAIR(1)); 
+        }
     }
-    std::cout << std::endl;
+
+    // 绘制边框 (可选，让游戏区域更明显)
+    // box(stdscr, 0, 0); 
+
+    // 【关键】刷新屏幕，将缓冲区内容显示到终端
+    refresh();
 }
 
 Room::~Room() {

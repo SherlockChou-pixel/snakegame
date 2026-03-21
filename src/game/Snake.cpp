@@ -1,8 +1,8 @@
 #include "Snake.h"
-
+#include <algorithm>
 /* 构造函数 */
-Snake::Snake(int _id, int startX, int startY, int _len, Direction _dir)
-    : id(_id), len(std::max(1, _len)), dir_(_dir)
+Snake::Snake(int _id, int startX, int startY, int _len, Direction _dir,std::pair<int,int> _board_size)
+    : id(_id), len(std::max(1, _len)), dir_(_dir),board_size(_board_size)
 {
     // 初始化蛇身：预留空间防止后续扩容而造成额外开销
     body_.reserve(100);
@@ -48,7 +48,7 @@ void Snake::grow()
     body_.push_back({2*tail_x-prev_x,2*tail_y-prev_y});
     len++;
 }
-void Snake::move(int width, int height)
+void Snake::move()
 {
     // 方向数组
     static const std::vector<std::pair<int, int>> direction = {
@@ -69,8 +69,8 @@ void Snake::move(int width, int height)
 
     // 边界环绕处理 (核心优化)
     // 使用 (x + width) % width 处理负数情况
-    new_head_x = (new_head_x % width + width) % width;
-    new_head_y = (new_head_y % height + height) % height;
+    new_head_x = (new_head_x % board_size.first + board_size.first) % board_size.first;
+    new_head_y = (new_head_y % board_size.second + board_size.second) % board_size.second;
 
     // 防止掉头逻辑 (保留之前的保险)
     if (body_.size() > 1) {
@@ -98,6 +98,23 @@ const std::vector<std::pair<int,int>>& Snake::getBody() const {
     return body_;
 }
 
+bool Snake::checkSelfCollision() const {
+    if (body_.size() <= 1) {
+        return false; // 长度小于等于1不可能撞自己
+    }
+
+    std::pair<int, int> head = body_[0];
+
+    // 从身体的第二节开始遍历 (索引 1 到 end)
+    for (size_t i = 1; i < body_.size(); ++i) {
+        if (body_[i] == head) {
+            return true; // 发现重合，撞到了！
+        }
+    }
+    
+    return false;
+}
 Snake::~Snake() {
     // 析构函数，如果需要清理资源
+    std::cout<<"射完了"<<std::endl;
 }

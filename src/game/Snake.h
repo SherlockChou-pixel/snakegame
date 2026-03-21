@@ -22,17 +22,23 @@ private:
     
     // 当前移动方向
     Direction dir_;
+
+    //
+    std::pair<int,int> board_size;
 public:
     // 构造：指定初始头部位置、长度、方向
-    Snake(int _id, int startX, int startY, int _len, Direction _dir);
+    Snake(int _id, int startX, int startY, int _len, Direction _dir,std::pair<int,int> _board_size);
     void setDirection(Direction dir);
     void grow();
     // 移动
-    void move(int width, int height);
+    void move();
     //获取头部位置
     std::pair<int,int> getHeadPos() const;
     //获取整个身子
     const std::vector<std::pair<int,int>>& getBody() const;
+
+    //碰撞检测
+    bool checkSelfCollision() const;
     ~Snake();
 };
 
