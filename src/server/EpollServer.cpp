@@ -7,6 +7,7 @@
 #include <cstring>
 #include <iostream>
 #include "IMessageHandler.h"
+
 EpollServer::EpollServer(int _port): port(_port), server_fd(-1), epoll_fd(-1), running(false) 
 ,messageHandler(nullptr){
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -58,9 +59,32 @@ void EpollServer::set_listen(int backlog) {
     }
     std::cout << "监听成功，backlog=" << backlog << std::endl;
 }
+// 🔑 新增：对外发送接口
+void EpollServer::sendToClient(int client_fd, const std::string& msg) {
+    // 确保消息以 \n 结尾，方便客户端拆包
+    std::string final_msg = msg;
+    if (final_msg.empty() || final_msg.back() != '\n') {
+        final_msg += "\n";
+    }
 
+    ssize_t sent = 0;
+    while (sent < final_msg.size()) {
+        ssize_t n = send(client_fd, final_msg.c_str() + sent, final_msg.size() - sent, 0);
+        if (n == -1) {
+            if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                // 发送缓冲区满了，稍后重试（简单起见这里直接 break，生产环境需加入写事件监听）
+                std::cerr << "Send buffer full for fd=" << client_fd << std::endl;
+                break; 
+            }
+            perror("send failed");
+            close_client(client_fd);
+            return;
+        }
+        sent += n;
+    }
+}
 void EpollServer::handle_client_event(int client_fd) {
-    char buffer[1024];
+    char buffer[4096];
     while (true) {
         ssize_t count = recv(client_fd, buffer, sizeof(buffer), 0);
         if (count == -1) {
@@ -73,24 +97,28 @@ void EpollServer::handle_client_event(int client_fd) {
         } else if (count == 0) {
             close_client(client_fd);
             break;
-        } else {
-            if (messageHandler != nullptr) {
-                messageHandler->onMessage(client_fd, buffer, count);
-            }
-            ssize_t sent = 0;
-            while (sent < count) {
-                std::string reply_msg = "射出来了:" + std::string(buffer, count) + "\r\n";
-                ssize_t n =send(client_fd, reply_msg.c_str(), reply_msg.size(), 0);
+        } 
+        //处理粘包
+        auto it=clients.find(client_fd);
+        if(it==clients.end()) return ;
 
-                if (n == -1) {
-                    if (errno == EAGAIN || errno == EWOULDBLOCK) {
-                        continue;
-                    }
-                    perror("send failed");
-                    close_client(client_fd);
-                    return;
-                }
-                sent += n;
+        std::shared_ptr<ClientContext> ctx=it->second;
+        ctx->buffer.append(buffer,count);
+        size_t pos;
+        std::cout<<"[LOG] 收到消息: "<<buffer<<std::endl;
+        // //回显消息
+        // sendToClient(client_fd, buffer);
+        //处理JSON的粘包问题，如果发送的不是JSON则需要在这个while里面编写
+        while((pos=ctx->buffer.find('\n'))!=std::string::npos)
+        {
+            //提取完整一行
+            std::string line=ctx->buffer.substr(0,pos);
+            std::cout<<"收到消息："<<line<<std::endl;
+            ctx->buffer.erase(0,pos+1);
+            if(!line.empty())
+            {
+                if(messageHandler!=nullptr)
+                    messageHandler->onMessage(client_fd, line.c_str(), line.length()); // 修改此处以符合接口
             }
         }
     }
@@ -102,6 +130,7 @@ void EpollServer::close_client(int client_fd) {
     std::cout << "客户端断开 fd=" << client_fd << std::endl;
     epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_fd, nullptr);
     close(client_fd);
+    clients.erase(client_fd); // 🔑 清理上下文
 }
 
 void EpollServer::run() {
@@ -147,7 +176,7 @@ void EpollServer::run() {
         }
 
         if (n == 0) {
-            std::cout<<"无客户端接通"<<std::endl;
+            // std::cout<<"无客户端接通"<<std::endl;
             continue; // 超时，重新检查 running
         }
 
@@ -180,6 +209,13 @@ void EpollServer::run() {
                     }
 
                     std::cout << "新客户端连接 fd=" << client << std::endl;
+                    //初始化客户端上下文
+                    clients[client]=std::make_shared<ClientContext>();
+                    clients[client]->fd=client;
+                    if(messageHandler!=nullptr)
+                    {
+                        messageHandler->onConnect(client);  // 这个调用是正确的，因为我们已经添加了onConnect方法
+                    }
                 }
             } else {
                 handle_client_event(events[i].data.fd);

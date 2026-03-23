@@ -44,8 +44,7 @@ void Snake::setDirection(Direction dir)
 void Snake::grow()
 {
     auto [tail_x,tail_y]=body_.back();
-    auto [prev_x,prev_y]=body_[len-2];
-    body_.push_back({2*tail_x-prev_x,2*tail_y-prev_y});
+    body_.push_back({tail_x,tail_y});
     len++;
 }
 void Snake::move()

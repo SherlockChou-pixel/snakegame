@@ -14,7 +14,17 @@
 #include <errno.h>      // errno, EAGAIN
 #include <netinet/in.h>
 #include <memory>
+#include <unordered_map>  // 添加map容器支持
+#include <string>         // 添加string支持
+
 class IMessageHandler;
+
+// 定义客户端上下文结构
+struct ClientContext {
+    int fd;
+    std::string buffer;  // 用于处理粘包
+};
+
 /*网络层 */
 class EpollServer {
 private:
@@ -29,6 +39,9 @@ private:
     int set_nonbl(int fd);
     void handle_client_event(int client_fd);
     void close_client(int client_fd);
+    
+    // 添加客户端映射
+    std::unordered_map<int, std::shared_ptr<ClientContext>> clients;
 
 public:
     explicit EpollServer(int _port);
@@ -37,6 +50,7 @@ public:
     void stop();
     //对外暴露接口
     void setMessageHandler(std::unique_ptr<IMessageHandler> handler);
+    void sendToClient(int client_fd, const std::string& msg);  
     
     ~EpollServer();
 };

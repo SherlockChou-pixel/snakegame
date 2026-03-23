@@ -8,7 +8,7 @@
 // 修改处：使用前向声明，移除 #include "Snake.h"
 class Snake; 
 #include "Food.h" // 如果 Food 类没有循环依赖，可以保留，否则也建议前向声明
-
+/*用于管理玩家，蛇和食物的交互等逻辑*/
 class Room
 {
 private:
@@ -17,6 +17,8 @@ private:
     int height;
     std::vector<std::string> board;
     Food* food_;
+    //存放玩家
+    std::vector<int> players;
 public:
     Room(int size, int width, int height);
     std::pair<int,int> getRoomSize() const;
