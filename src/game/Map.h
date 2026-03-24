@@ -17,29 +17,11 @@ enum CellType {
 // 地图类 (为了演示，我们只做静态地图)
 class GameMap {
 private:
-    std::vector<std::vector<int>> grid; // 用 int 存储 CellType，方便 JSON 序列化
     int width;
     int height;
 
 public:
-    GameMap(int w, int h) : width(w), height(h) {
-        // 初始化为全空
-        grid.resize(height, std::vector<int>(width, EMPTY));
-        
-        // 绘制边界墙壁
-        for (int i = 0; i < width; i++) {
-            grid[0][i] = WALL;           // 上边
-            grid[height-1][i] = WALL;    // 下边
-        }
-        for (int i = 0; i < height; i++) {
-            grid[i][0] = WALL;           // 左边
-            grid[i][width-1] = WALL;     // 右边
-        }
-        
-        // 在中间放一个食物 (示例)
-        grid[height/2][width/2] = FOOD;
-    }
-
+    GameMap(int w, int h) : width(w), height(h) {}
     // 获取宽度
     int getWidth() const {
         return width;
@@ -55,7 +37,6 @@ public:
         nlohmann::json j;
         j["width"] = width;
         j["height"] = height;
-        j["grid"] = grid; // nlohmann/json 能自动处理 vector<vector<int>>
         return j;
     }
 };

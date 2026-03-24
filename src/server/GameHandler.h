@@ -31,8 +31,6 @@ public:
         welcome["msg"] = "Connected! Receiving map...";
         server->sendToClient(client_fd, welcome.dump() + "\n");
 
-        // 2. 发送地图
-        // sendMap(client_fd);
     }
     //处理收到的消息
     void onMessage(int client_fd, const char* buffer, size_t length) override {  
@@ -89,7 +87,6 @@ private:
         
         // 获取地图的 JSON 表示
         json map_json = map->toJson();
-        
         // 打包并发送
         std::string packet = Protocol::build_response(CMD_MAP, map_json) + "\n";
         server->sendToClient(client_fd, packet);
