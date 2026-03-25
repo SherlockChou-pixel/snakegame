@@ -35,8 +35,9 @@ public:
         std::cout << "[GAME] 命令ID=" << cmd_id << std::endl;
         switch(cmd_id)
         {
-            case 1:break;
-
+            case 1:roomManagerRef->creatRoom(client_fd);
+            break;
+            case 2:roomManagerRef->startGame(data.data.value("room_id", ""));break;
             default:break;
         }
     }

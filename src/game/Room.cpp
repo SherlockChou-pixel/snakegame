@@ -1,9 +1,15 @@
 #include "Room.h"
 #include "Snake.h"
+#include <nlohmann/json.hpp>
+#include "../protocol/Protocol.h" 
 
+Room::Room(const std::string& id): id(id),food_(nullptr){
 
-
-Room::Room(int size):size(size), food_(nullptr){
+}
+void Room:: initialGameWorld()
+{
+    width=25;
+    height=25;
 
 }
 void Room::setMap(GameMap*map){
@@ -14,24 +20,28 @@ void Room::setMap(GameMap*map){
 void Room::setFood(Food* food) {
     food_ = food;
 }
-void Room::eatFood(Snake& snake,Food*food)
+bool Room::add_player(Player player){
+    if(players.size()>=max_size) return false;
+    players.emplace_back(player);
+    return true;
+}
+/* 初始化地图，蛇，食物*/
+std::vector<std::pair<int,std::string>> Room::startGame()
 {
-    if(food->getPosition()==snake.getHeadPos())
+    initialGameWorld();
+    std::vector<std::pair<int,std::string>> messagesToSend;
+    nlohmann::json j;
+    j["width"]=width;
+    j["height"]=height;
+    for(const auto &play:players)
     {
-        snake.grow();
-        food->generateRandom(width, height, snake.getBody());
-        // 设置食物到房间
-        setFood(food);
-        // 更新地图
-        updateMap(snake);
+        std::string str=Protocol::build_response(2,j);
+        messagesToSend.push_back({play.id,str});
     }
-}
-//获取尺寸
-void Room::updateMap(const Snake& snake) {
+    return messagesToSend;
+        
 
 }
-
-
 Room::~Room() {
     // 析构函数
     std::cout<<"房间炸了"<<std::endl;

@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <iostream>
-#include <ncurses.h>
+#include "../server/RoomManager.h"
 
 // 修改处：使用前向声明，移除 #include "Snake.h"
 class Snake; 
@@ -13,20 +13,21 @@ class Snake;
 class Room
 {
 private:
-    int size;//人数大小
+    std::string id;//房间号
     GameMap* map_;//地图大小
     Food* food_;//食物位置
     //存放玩家
-    std::vector<int> players;
+    std::vector<Player> players;
     int width;
     int height;
+    const int max_size=4;//最大人数
 public:
-    Room(int size);
+    Room(const std::string& id);
     void setMap(GameMap*map);
-    void player_join();
-    void updateMap(const Snake& snake); 
+    bool add_player(Player player);
     void setFood(Food* food);
-    void eatFood(Snake& snake, Food* food);
+    std::vector<std::pair<int,std::string>> startGame();
+    void initialGameWorld();
     ~Room();
 };
 

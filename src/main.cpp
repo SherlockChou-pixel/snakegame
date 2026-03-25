@@ -33,7 +33,7 @@ int main() {
         std::cout << "[DEBUG] 地图已初始化，网格大小: " 
                   << game_map->getWidth() << "x" << game_map->getHeight() << std::endl;
 
-        auto server = std::make_unique<EpollServer>(8080);
+        auto server = std::make_unique<EpollServer>(8888);
 
         // 1. 创建适配器的智能指针
         auto networkAdapter = std::make_unique<NetworkSenderAdapter>(server.get());
