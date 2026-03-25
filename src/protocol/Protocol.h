@@ -6,9 +6,9 @@
 
 // 添加命令ID定义
 enum {
-    CMD_START = 1,    // 开始命令
-    CMD_MAP = 2,      // 地图数据命令
-    CMD_MOVE = 3,     // 移动命令
+    CMD_JOIN=1,
+    CMD_START = 2,    // 开始命令
+    CMD_MAP = 3,      // 地图数据命令
     CMD_UNKNOWN = 99  // 未知命令
 };
 

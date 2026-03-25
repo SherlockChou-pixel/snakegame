@@ -13,12 +13,10 @@ Protocol::~Protocol() {
 ProtocolData Protocol::parse(const std::string& json_str) {
     ProtocolData result;
     try {
-        std::cout << "json_str: " << json_str << std::endl;
         nlohmann::json j = nlohmann::json::parse(json_str);
         // 先检测指令类型
         if (j.contains("cmd")) {
             result.cmd_id = j["cmd"].get<int>();
-            std::cout << "cmd_id: " << 666 << std::endl;
             // 再获取对应数据
             if (j.contains("data")) {
                 result.data = j["data"];

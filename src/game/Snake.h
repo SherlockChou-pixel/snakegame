@@ -29,6 +29,7 @@ public:
     // 构造：指定初始头部位置、长度、方向
     Snake(int _id, int startX, int startY, int _len, Direction _dir,std::pair<int,int> _board_size);
     void setDirection(Direction dir);
+    //生长
     void grow();
     // 移动
     void move();
@@ -36,9 +37,13 @@ public:
     std::pair<int,int> getHeadPos() const;
     //获取整个身子
     const std::vector<std::pair<int,int>>& getBody() const;
-
+    //获取方向
+    Direction getdir() const;
     //碰撞检测
     bool checkSelfCollision() const;
+    //发送身体
+    nlohmann::json toJson() const;
+    
     ~Snake();
 };
 

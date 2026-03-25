@@ -14,6 +14,9 @@ add_executable(ServerTest
     src/main.cpp
     src/server/EpollServer.cpp
     src/protocol/Protocol.cpp
+    src/server/NetworkSenderAdapter.cpp
+    src/server/RoomManager.cpp
+    
     # 如果有其他 cpp 文件，继续加在这里
 )
 

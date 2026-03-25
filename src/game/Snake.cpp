@@ -39,7 +39,10 @@ void Snake::setDirection(Direction dir)
     if (!isOpposite(dir_, dir)) {
         dir_ = dir;
     }
-    // 直接掉头时忽略输入，保持原方向
+}
+
+Direction Snake::getdir() const{
+    return dir_;
 }
 void Snake::grow()
 {
@@ -75,9 +78,6 @@ void Snake::move()
     if (body_.size() > 1) {
         auto [next_x, next_y] = body_[1];
         if (new_head_x == next_x && new_head_y == next_y) {
-            // 如果试图掉头，保持原位置或忽略本次移动，这里选择忽略方向变化
-            // 但坐标已经计算为环绕后的值，通常穿墙模式下允许掉头需额外判断
-            // 此处简化为直接更新
         }
     }
 
@@ -112,6 +112,14 @@ bool Snake::checkSelfCollision() const {
     }
     
     return false;
+}
+
+nlohmann::json Snake::toJson() const
+{
+    nlohmann::json json;
+    json["data"] = body_;
+    json["length"]=len;
+    return json;
 }
 Snake::~Snake() {
     // 析构函数，如果需要清理资源

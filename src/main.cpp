@@ -9,9 +9,10 @@
 #include "server/EpollServer.h"      // 网络层
 #include "server/GameHandler.h"      // 业务处理层 (包含协议解析)
 #include "game/Map.h"          // 地图定义 (刚才新建的)
-
+#include "server/NetworkSenderAdapter.h"
+#include "server/RoomManager.h"
 int main() {
-    // 初始化随机数种子 (虽然静态地图暂时不用，但留着好习惯)
+    // 初始化随机数种子 
     srand(static_cast<unsigned int>(time(NULL)));
 
     const int PORT = 8888;
@@ -32,16 +33,17 @@ int main() {
         std::cout << "[DEBUG] 地图已初始化，网格大小: " 
                   << game_map->getWidth() << "x" << game_map->getHeight() << std::endl;
 
-        // 2. 创建服务器实例
-        auto server = std::make_unique<EpollServer>(PORT);
-        server->set_listen(5); // 设置监听队列长度
+        auto server = std::make_unique<EpollServer>(8080);
 
-        // 3. 创建业务处理器 (GameHandler)
-        // 将 server 和 game_map 的原始指针传进去 (注意：确保 game_map 生命周期长于 handler)
-        auto handler = std::make_unique<GameHandler>(server.get(), game_map.get());
+        // 1. 创建适配器的智能指针
+        auto networkAdapter = std::make_unique<NetworkSenderAdapter>(server.get());
 
-        // 4. 绑定处理器到服务器
-        server->setMessageHandler(std::move(handler));
+        auto roomManager = std::make_unique<RoomManager>(*networkAdapter);
+
+        auto gameHandler = std::make_unique<GameHandler>(*roomManager);
+
+        server->setMessageHandler(std::move(gameHandler));
+        server->set_listen(10);
 
         // 5. 启动键盘监听线程 (用于优雅退出)
         std::atomic<bool> quit_flag(false);
