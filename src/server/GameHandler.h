@@ -1,11 +1,9 @@
 #ifndef _GAME_HANDLER_H
 #define _GAME_HANDLER_H
-
 #include "IMessageHandler.h"
 #include "EpollServer.h"
 #include "../game/Map.h"      // 修复地图头文件路径
 #include "../protocol/Protocol.h"  // 修复协议头文件路径
-#include "../game/Snake.h"
 #include "RoomManager.h"
 #include <nlohmann/json.hpp>
 #include <atomic>

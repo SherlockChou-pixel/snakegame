@@ -19,6 +19,7 @@ class GameMap {
 private:
     int width;
     int height;
+    
 
 public:
     GameMap(int w, int h) : width(w), height(h) {}

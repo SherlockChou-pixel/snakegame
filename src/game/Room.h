@@ -4,8 +4,7 @@
 #include <vector>
 #include <iostream>
 #include "../server/RoomManager.h"
-
-// 修改处：使用前向声明，移除 #include "Snake.h"
+#include "Player.h" 
 class Snake; 
 #include "Food.h" // 如果 Food 类没有循环依赖，可以保留，否则也建议前向声明
 #include "../game/Map.h" 
@@ -24,7 +23,7 @@ private:
 public:
     Room(const std::string& id);
     void setMap(GameMap*map);
-    bool add_player(Player player);
+    bool add_player(Player&& player);
     void setFood(Food* food);
     std::vector<std::pair<int,std::string>> startGame();
     void initialGameWorld();

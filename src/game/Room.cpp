@@ -1,5 +1,5 @@
 #include "Room.h"
-#include "Snake.h"
+#include "Snake.h" // 为了创建 Snake
 #include <nlohmann/json.hpp>
 #include "../protocol/Protocol.h" 
 
@@ -20,9 +20,9 @@ void Room::setMap(GameMap*map){
 void Room::setFood(Food* food) {
     food_ = food;
 }
-bool Room::add_player(Player player){
+bool Room::add_player(Player&& player){
     if(players.size()>=max_size) return false;
-    players.emplace_back(player);
+    players.emplace_back(std::move(player));
     return true;
 }
 /* 初始化地图，蛇，食物*/

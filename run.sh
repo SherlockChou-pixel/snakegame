@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 切换到工程目录
-cd /home/ubuntu/snakegame
+cd /home/chou/snakegame
 
 # 创建构建目录（如果不存在）
 mkdir -p build

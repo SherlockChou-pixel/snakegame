@@ -1,8 +1,8 @@
 #include "Snake.h"
 #include <algorithm>
 /* 构造函数 */
-Snake::Snake(int _id, int startX, int startY, int _len, Direction _dir,std::pair<int,int> _board_size)
-    : id(_id), len(std::max(1, _len)), dir_(_dir),board_size(_board_size)
+Snake::Snake( int startX, int startY, int _len, Direction _dir,std::pair<int,int> _board_size)
+    : len(std::max(1, _len)), dir_(_dir),board_size(_board_size)
 {
     // 初始化蛇身：预留空间防止后续扩容而造成额外开销
     body_.reserve(100);
@@ -23,7 +23,6 @@ Snake::Snake(int _id, int startX, int startY, int _len, Direction _dir,std::pair
         body_.push_back( {startX - dx * i, startY - dy * i});
     }
 
-    std::cout << _id << " 蛇已就绪" << std::endl;
 }
 
 static bool isOpposite(Direction a, Direction b)
