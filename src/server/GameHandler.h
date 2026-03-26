@@ -42,6 +42,7 @@ public:
 
     void onDisconnect(int client_fd) override {
         std::cout << "[GAME] 玩家断开 fd=" << client_fd << std::endl;
+        roomManagerRef->handlePlayerDisconnect(client_fd);
     }
     ~GameHandler(){
         std::cout<<"以gamehandler释放资源"<<std::endl;

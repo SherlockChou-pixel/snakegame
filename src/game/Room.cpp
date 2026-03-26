@@ -81,6 +81,16 @@ void Room::handlePlayerInput(int player_id, Direction new_dir){
     }
 
 }
+
+void Room::removePlayer(int playerId) {
+    players.erase(
+        std::remove_if(players.begin(), players.end(),
+            [playerId](const Player& p) { return p.id == playerId; }),
+        players.end()
+    );
+    // 可选：打印日志
+    std::cout << "Player " << playerId << " removed from room " << id << "." << std::endl;
+}
 Room::~Room() {
     // 析构函数
     std::cout<<"房间炸了"<<std::endl;

@@ -128,6 +128,7 @@ void EpollServer::setMessageHandler(std::unique_ptr<IMessageHandler> handler) {
 }
 void EpollServer::close_client(int client_fd) {
     std::cout << "客户端断开 fd=" << client_fd << std::endl;
+    messageHandler->onDisconnect(client_fd);
     epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_fd, nullptr);
     close(client_fd);
     clients.erase(client_fd); // 🔑 清理上下文

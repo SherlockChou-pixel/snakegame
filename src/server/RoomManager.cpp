@@ -62,20 +62,30 @@ void RoomManager::runGameLoop(){
 }
 /*更新所有房间游戏状态*/
 void RoomManager::updateAllRooms(){
-    for(auto&[roomid,room]:activeRooms)
-    {
-        Room* roomPtr=room.get();
-        if(roomPtr->isRunning())
-        {
-            std::string msg=roomPtr->updateGameState();
-            nlohmann::json res=nlohmann::json::parse(msg);
+    // 使用迭代器遍历，这样可以在遍历时安全地删除元素
+    for(auto it = activeRooms.begin(); it != activeRooms.end(); ) {
+        auto& [roomid, room] = *it; // 解引用迭代器得到 pair
+        Room* roomPtr = room.get();
+        
+        if(roomPtr->isRunning()) {
+            std::string msg = roomPtr->updateGameState();
+            nlohmann::json res = nlohmann::json::parse(msg);
             const std::vector<Player>& roomPlayers = room->getPlayers();
-            // std::cout<<msg<<std::endl;
-            // 遍历玩家列表，将消息发送给每一个玩家
+            
             for (const Player& player : roomPlayers) {
-                int clientId = player.id; // Player 结构体里的 id
-                networkSenderRef.sendToClient(clientId, Protocol::build_response(4,res));
+                int clientId = player.id;
+                networkSenderRef.sendToClient(clientId, Protocol::build_response(4, res));
             }
+        }
+
+        // 检查房间是否为空
+        if (room->isRoomEmpty()) {
+            std::cout << "Cleaning up empty room: " << roomid << std::endl;
+            // erase 返回下一个有效的迭代器，直接赋值给 it
+            it = activeRooms.erase(it);
+        } else {
+            // 房间不为空，移动到下一个
+            ++it;
         }
     }
 }
@@ -90,7 +100,16 @@ void RoomManager::changePlayerDirection(const std::string& room_id, int player_i
         std::cerr << "Room with ID " << room_id << " not found." << std::endl;
     }
 }
+void RoomManager::handlePlayerDisconnect(int client_fd){
+    std::cout<<"开始清理"<<std::endl;
+    for(auto& [room_id,room]:activeRooms)
+    {
+        
+        room->removePlayer(client_fd);
+        break;
+    }
 
+}
 RoomManager::~RoomManager(){
 
     gameLoopRunning.store(false);

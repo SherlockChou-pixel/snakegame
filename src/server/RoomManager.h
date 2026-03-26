@@ -28,6 +28,9 @@ public:
     explicit RoomManager(INetworkSender& sender);
 
     void changePlayerDirection(const std::string& room_id, int player_id, Direction dir);
+
+    /*玩家离开*/
+    void handlePlayerDisconnect(int client_fd);
     ~RoomManager();
 };
 #endif

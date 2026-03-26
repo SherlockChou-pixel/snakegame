@@ -37,6 +37,8 @@ public:
     /*判断房间有没有空*/
 
     bool isRoomEmpty() const{return players.empty();}
+
+    void removePlayer(int playerId);
     ~Room();
 };
 
