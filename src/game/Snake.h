@@ -19,7 +19,6 @@ private:
     std::vector<std::pair<int, int>> body_;
     // 当前移动方向
     Direction dir_;
-
     std::pair<int,int> board_size;
 public:
     // 构造：指定初始头部位置、长度、方向

@@ -20,6 +20,7 @@ private:
     int width;
     int height;
     const int max_size=4;//最大人数
+    bool isRunningGame=false;
 public:
     Room(const std::string& id);
     void setMap(GameMap*map);
@@ -27,6 +28,12 @@ public:
     void setFood(Food* food);
     std::vector<std::pair<int,std::string>> startGame();
     void initialGameWorld();
+    bool isRunning() const{ return isRunningGame;}
+    void setRunning(bool status){isRunningGame=status;}
+    std::string updateGameState();
+
+    const std::vector<Player>& getPlayers() const { return players; }
+
     ~Room();
 };
 

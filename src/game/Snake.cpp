@@ -1,11 +1,16 @@
 #include "Snake.h"
 #include <algorithm>
+
+void to_json(nlohmann::json& j, const std::pair<int, int>& p) {
+    j = nlohmann::json::array({p.first, p.second});
+}
 /* 构造函数 */
 Snake::Snake( int startX, int startY, int _len, Direction _dir,std::pair<int,int> _board_size)
     : len(std::max(1, _len)), dir_(_dir),board_size(_board_size)
 {
     // 初始化蛇身：预留空间防止后续扩容而造成额外开销
     body_.reserve(100);
+    
     // 方向数组，用于初始化身体和移动
     static const std::vector<std::pair<int, int>> direction = {
         {0, -1},  // UP：y减1（假设屏幕y轴向下）
@@ -22,7 +27,7 @@ Snake::Snake( int startX, int startY, int _len, Direction _dir,std::pair<int,int
     for (int i = 1; i < len; ++i) {
         body_.push_back( {startX - dx * i, startY - dy * i});
     }
-
+    std::cout<<"射来了"<<std::endl;
 }
 
 static bool isOpposite(Direction a, Direction b)
@@ -116,7 +121,9 @@ bool Snake::checkSelfCollision() const {
 nlohmann::json Snake::toJson() const
 {
     nlohmann::json json;
-    json["data"] = body_;
+    for(auto&[x,y]:body_)
+        to_json(json,std::make_pair(x,y));
+    json["data"] = json;
     json["length"]=len;
     return json;
 }

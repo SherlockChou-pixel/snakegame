@@ -2,7 +2,7 @@
 #include "Snake.h" // 为了创建 Snake
 #include <nlohmann/json.hpp>
 #include "../protocol/Protocol.h" 
-
+#include <nlohmann/json.hpp>
 Room::Room(const std::string& id): id(id),food_(nullptr){
 
 }
@@ -29,6 +29,7 @@ bool Room::add_player(Player&& player){
 std::vector<std::pair<int,std::string>> Room::startGame()
 {
     initialGameWorld();
+    setRunning(true);
     std::vector<std::pair<int,std::string>> messagesToSend;
     nlohmann::json j;
     j["width"]=width;
@@ -42,6 +43,34 @@ std::vector<std::pair<int,std::string>> Room::startGame()
         
 
 }
+std::string Room::updateGameState()
+{
+    for(auto &player:players)
+    {
+        if(player.snake!=nullptr )
+            player.snake->move();
+    } 
+
+    nlohmann::json gameStateJson;
+    gameStateJson["type"] = "game_state_update";
+    gameStateJson["room_id"] = id;
+
+    nlohmann::json playersArray = nlohmann::json::array();
+    for (const Player& p : players) {
+        nlohmann::json playerState;
+        playerState["id"] = p.id;
+        playerState["score"] = p.score;
+        if (p.snake != nullptr) {
+            playerState["snake_body"] = p.snake->getBody();
+        }
+        playersArray.push_back(playerState);
+    }
+    gameStateJson["players"] = playersArray;
+
+    // 返回这个消息字符串
+    return gameStateJson.dump();
+}
+
 Room::~Room() {
     // 析构函数
     std::cout<<"房间炸了"<<std::endl;
