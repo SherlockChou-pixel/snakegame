@@ -6,7 +6,7 @@ void to_json(nlohmann::json& j, const std::pair<int, int>& p) {
 }
 /* 构造函数 */
 Snake::Snake( int startX, int startY, int _len, Direction _dir,std::pair<int,int> _board_size)
-    : len(std::max(1, _len)), dir_(_dir),board_size(_board_size)
+    : len(std::max(1, _len)), dir_(_dir),pending_dir_(_dir),board_size(_board_size)
 {
     // 初始化蛇身：预留空间防止后续扩容而造成额外开销
     body_.reserve(100);
@@ -41,7 +41,7 @@ static bool isOpposite(Direction a, Direction b)
 void Snake::setDirection(Direction dir)
 {
     if (!isOpposite(dir_, dir)) {
-        dir_ = dir;
+        pending_dir_ = dir;
     }
 }
 
@@ -56,6 +56,10 @@ void Snake::grow()
 }
 void Snake::move()
 {
+
+    if (pending_dir_ != dir_) {
+        dir_ = pending_dir_;
+    }
     // 方向数组
     static const std::vector<std::pair<int, int>> direction = {
         {0, -1},  // UP：y减1（假设屏幕y轴向下）
@@ -78,12 +82,6 @@ void Snake::move()
     new_head_x = (new_head_x % board_size.first + board_size.first) % board_size.first;
     new_head_y = (new_head_y % board_size.second + board_size.second) % board_size.second;
 
-    // 防止掉头逻辑 (保留之前的保险)
-    if (body_.size() > 1) {
-        auto [next_x, next_y] = body_[1];
-        if (new_head_x == next_x && new_head_y == next_y) {
-        }
-    }
 
     // 更新身体
     for (int i = len - 1; i > 0; --i) {

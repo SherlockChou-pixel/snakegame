@@ -33,7 +33,10 @@ public:
     std::string updateGameState();
 
     const std::vector<Player>& getPlayers() const { return players; }
+    void handlePlayerInput(int player_id, Direction new_dir);
+    /*判断房间有没有空*/
 
+    bool isRoomEmpty() const{return players.empty();}
     ~Room();
 };
 

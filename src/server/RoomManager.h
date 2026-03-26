@@ -7,6 +7,7 @@
 #include "NetworkSenderAdapter.h"
 #include <thread>
 #include <atomic>
+#include "../game/Player.h"
 class Room; // 前向声明
 class Snake; // 前向声明
 
@@ -25,6 +26,8 @@ public:
     void runGameLoop();
     void updateAllRooms();
     explicit RoomManager(INetworkSender& sender);
+
+    void changePlayerDirection(const std::string& room_id, int player_id, Direction dir);
     ~RoomManager();
 };
 #endif

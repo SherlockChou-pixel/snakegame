@@ -5,12 +5,7 @@
 #include <iostream>
 #include <unordered_set>
 #include <nlohmann/json.hpp>
-enum class Direction{
-    up=0,
-    down=1,
-    left=2,
-    right=3
-};
+#include "Player.h"
 
 class Snake{
 private:
@@ -19,6 +14,7 @@ private:
     std::vector<std::pair<int, int>> body_;
     // 当前移动方向
     Direction dir_;
+    Direction pending_dir_;
     std::pair<int,int> board_size;
 public:
     // 构造：指定初始头部位置、长度、方向

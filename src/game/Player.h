@@ -7,4 +7,12 @@ struct Player{
     std::unique_ptr<Snake> snake;//玩家的蛇
     int score;//玩家的分数
 };
+
+
+enum class Direction{
+    up=0,
+    down=1,
+    left=2,
+    right=3
+};
 #endif

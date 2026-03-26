@@ -68,16 +68,29 @@ void RoomManager::updateAllRooms(){
         if(roomPtr->isRunning())
         {
             std::string msg=roomPtr->updateGameState();
+            nlohmann::json res=nlohmann::json::parse(msg);
             const std::vector<Player>& roomPlayers = room->getPlayers();
             // std::cout<<msg<<std::endl;
             // 遍历玩家列表，将消息发送给每一个玩家
             for (const Player& player : roomPlayers) {
                 int clientId = player.id; // Player 结构体里的 id
-                networkSenderRef.sendToClient(clientId, msg);
+                networkSenderRef.sendToClient(clientId, Protocol::build_response(4,res));
             }
         }
     }
 }
+//方向改变
+void RoomManager::changePlayerDirection(const std::string& room_id, int player_id, Direction dir)
+{
+    auto it = activeRooms.find(room_id);
+    if (it != activeRooms.end()) {
+        // 找到房间，直接调用其处理函数
+        it->second->handlePlayerInput(player_id, dir);
+    } else {
+        std::cerr << "Room with ID " << room_id << " not found." << std::endl;
+    }
+}
+
 RoomManager::~RoomManager(){
 
     gameLoopRunning.store(false);

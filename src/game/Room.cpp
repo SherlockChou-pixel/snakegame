@@ -70,7 +70,17 @@ std::string Room::updateGameState()
     // 返回这个消息字符串
     return gameStateJson.dump();
 }
+void Room::handlePlayerInput(int player_id, Direction new_dir){
+    for (auto& player : players) {
+        if (player.id == player_id) {
+            if (player.snake != nullptr) {
+                player.snake->setDirection(new_dir);
+            }
+            return; // 找到并处理后返回
+        }
+    }
 
+}
 Room::~Room() {
     // 析构函数
     std::cout<<"房间炸了"<<std::endl;
