@@ -3,6 +3,8 @@
 #include <ctime>
 #include <unordered_set>
 #include <random>
+#include "Player.h" 
+#include"Snake.h"
 Food::Food(int x, int y) : x_(x), y_(y) {}
 
 void Food::setPosition(int x, int y) {
@@ -14,16 +16,20 @@ std::pair<int, int> Food::getPosition() const {
     return {x_, y_};
 }
 
-void Food::generateRandom(int width, int height, const std::vector<std::pair<int, int>>& occupied) {
+void Food::generateRandom(int width, int height, std::vector<Player>& players) {
     // 静态引擎，避免每次调用都重新种子化
     static std::random_device rd;
     static std::mt19937 gen(rd());
     
     // 使用哈希表存储占用位置
     std::unordered_set<int> occupiedSet;
-    for (const auto& pos : occupied) {
-        int key = pos.second * width + pos.first;
-        occupiedSet.insert(key);
+    for (const auto& player : players) {
+        
+        for(const auto& pos : player.snake->getBody())
+        {
+            int key = pos.second * width + pos.first;
+            occupiedSet.insert(key);
+        }
     }
     
     int totalCells = width * height;

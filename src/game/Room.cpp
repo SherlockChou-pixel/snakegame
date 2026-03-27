@@ -3,22 +3,21 @@
 #include <nlohmann/json.hpp>
 #include "../protocol/Protocol.h" 
 #include <nlohmann/json.hpp>
-Room::Room(const std::string& id): id(id),food_(nullptr){
-
+Room::Room(const std::string& id): id(id){
+    food=std::make_unique<Food>(width,height);
+    
 }
 void Room:: initialGameWorld()
 {
     width=25;
     height=25;
+    food->generateRandom(width,height,players);
 
 }
 void Room::setMap(GameMap*map){
     map_=map;
     width=map_->getWidth();
     height=map_->getHeight();
-}
-void Room::setFood(Food* food) {
-    food_ = food;
 }
 bool Room::add_player(Player&& player){
     if(players.size()>=max_size) return false;
@@ -31,9 +30,13 @@ std::vector<std::pair<int,std::string>> Room::startGame()
     initialGameWorld();
     setRunning(true);
     std::vector<std::pair<int,std::string>> messagesToSend;
-    nlohmann::json j;
+    nlohmann::json j,foodjson;
     j["width"]=width;
     j["height"]=height;
+    auto [x,y]=food->getPosition();
+    foodjson["x"]=x;
+    foodjson["y"]=y;
+    j["food"]=foodjson;
     for(const auto &play:players)
     {
         std::string str=Protocol::build_response(2,j);
@@ -48,7 +51,22 @@ std::string Room::updateGameState()
     for(auto &player:players)
     {
         if(player.snake!=nullptr )
+        {
             player.snake->move();
+            auto head_pos=player.snake->getHeadPos();
+            if(head_pos==food->getPosition())
+            {
+                player.snake->grow();
+                food->generateRandom(width,height,players);
+                player.score++;
+            }
+            if(player.snake->checkSelfCollision())
+            {
+                // setRunning(false);
+                // break;
+            }
+        }
+            
     } 
 
     nlohmann::json gameStateJson;
@@ -67,6 +85,12 @@ std::string Room::updateGameState()
     }
     gameStateJson["players"] = playersArray;
 
+
+    nlohmann::json foodjson;
+    auto [x,y]=food->getPosition();
+    foodjson["x"]=x;
+    foodjson["y"]=y;
+    gameStateJson["food"]=foodjson;
     // 返回这个消息字符串
     return gameStateJson.dump();
 }

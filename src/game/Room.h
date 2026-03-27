@@ -5,6 +5,7 @@
 #include <iostream>
 #include "../server/RoomManager.h"
 #include "Player.h" 
+#include <memory>
 class Snake; 
 #include "Food.h" // 如果 Food 类没有循环依赖，可以保留，否则也建议前向声明
 #include "../game/Map.h" 
@@ -14,7 +15,7 @@ class Room
 private:
     std::string id;//房间号
     GameMap* map_;//地图大小
-    Food* food_;//食物位置
+    std::unique_ptr<Food> food;//食物位置
     //存放玩家
     std::vector<Player> players;
     int width;
@@ -25,7 +26,6 @@ public:
     Room(const std::string& id);
     void setMap(GameMap*map);
     bool add_player(Player&& player);
-    void setFood(Food* food);
     std::vector<std::pair<int,std::string>> startGame();
     void initialGameWorld();
     bool isRunning() const{ return isRunningGame;}
@@ -35,9 +35,7 @@ public:
     const std::vector<Player>& getPlayers() const { return players; }
     void handlePlayerInput(int player_id, Direction new_dir);
     /*判断房间有没有空*/
-
     bool isRoomEmpty() const{return players.empty();}
-
     void removePlayer(int playerId);
     ~Room();
 };

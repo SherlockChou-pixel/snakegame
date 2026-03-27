@@ -10,6 +10,7 @@ enum {
     CMD_START = 2,    // 开始命令
     CMD_MOVE=3, //移动指令
     CMD_UPDATE=4,  //更新指令
+    CMD_DEAD=5, //死亡指令
     CMD_UNKNOWN = 99  // 未知命令
 };
 
