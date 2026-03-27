@@ -115,7 +115,29 @@ bool Snake::checkSelfCollision() const {
     
     return false;
 }
+void Snake::resetToInitialPos(int startX,int startY,Direction dir){
+    len=init_len;
+    dir_ = dir;
+    pending_dir_ = dir; // 重置待处理方向
 
+    // 重新初始化身体，逻辑与构造函数类似
+    body_.clear();
+    body_.reserve(100); // 预留空间
+
+    static const std::vector<std::pair<int, int>> direction_offsets = {
+        {0, -1},  // UP
+        {0, 1},   // DOWN
+        {-1, 0},  // LEFT
+        {1, 0}    // RIGHT
+    };
+
+    auto [dx, dy] = direction_offsets[static_cast<int>(dir)];
+
+    body_.push_back({startX, startY});
+    for (int i = 1; i < len; ++i) {
+        body_.push_back({startX - dx * i, startY - dy * i});
+    }
+}
 nlohmann::json Snake::toJson() const
 {
     nlohmann::json json;

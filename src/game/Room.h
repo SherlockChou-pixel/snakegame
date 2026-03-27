@@ -22,6 +22,9 @@ private:
     int height;
     const int max_size=4;//最大人数
     bool isRunningGame=false;
+
+    const int RESPAWN_TIME_SEC = 3; // 重生时间为3秒
+    const int FRAMES_PER_SECOND = 60; // 假设你的游戏循环频率是10FPS
 public:
     Room(const std::string& id);
     void setMap(GameMap*map);
@@ -33,7 +36,11 @@ public:
     std::string updateGameState();
 
     const std::vector<Player>& getPlayers() const { return players; }
+    /*处理玩家输入*/
     void handlePlayerInput(int player_id, Direction new_dir);
+    /*处理玩家死亡*/
+    void handlePlayerDeath(Player& player);
+    std::pair<int,int> findSafeSpawnPosition();
     /*判断房间有没有空*/
     bool isRoomEmpty() const{return players.empty();}
     void removePlayer(int playerId);

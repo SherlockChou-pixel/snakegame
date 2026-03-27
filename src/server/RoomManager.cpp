@@ -13,9 +13,11 @@ void RoomManager::creatRoom(int client_fd)
     player.id=client_fd;
     player.snake = std::make_unique<Snake>(0,0,3,Direction::left,std::make_pair(25, 25)); 
     player.score=0;
+    player.state=PlayerState::alive;
     nlohmann::json j;
     j["room_id"]=newRoomid;
     j["id"]=player.id;
+    j["player_state"]=player.state;
     if (player.snake != nullptr)
         j["snake"]=player.snake->getBody();
     j["score"]=player.score;

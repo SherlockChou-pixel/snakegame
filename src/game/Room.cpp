@@ -50,7 +50,23 @@ std::string Room::updateGameState()
 {
     for(auto &player:players)
     {
-        if(player.snake!=nullptr )
+
+        if (player.state == PlayerState::dead) {
+            // 更新重生计时器
+            if (player.respawnTimer > 0) {
+                player.respawnTimer--;
+            } else {
+                Snake* snake = player.snake.get(); 
+                std::pair<int, int> safePosition = findSafeSpawnPosition();
+                
+                    snake->resetToInitialPos(safePosition.first,safePosition.second,Direction::right); 
+                    player.state = PlayerState::alive;
+                    std::cout << "Player " << player.id << " has respawned at position (" 
+                              << safePosition.first << ", " << safePosition.second << ")." << std::endl;
+                
+            }
+        }
+        else if(player.snake!=nullptr )
         {
             player.snake->move();
             auto head_pos=player.snake->getHeadPos();
@@ -66,6 +82,15 @@ std::string Room::updateGameState()
                 // break;
             }
         }
+
+        for (auto& player : players) {
+            if (player.state == PlayerState::alive) { // 只检查存活的玩家
+                Snake* snake = player.snake.get();
+                if (snake->checkSelfCollision()) {
+                    handlePlayerDeath(player);
+                }
+        }
+    }
             
     } 
 
@@ -78,6 +103,7 @@ std::string Room::updateGameState()
         nlohmann::json playerState;
         playerState["id"] = p.id;
         playerState["score"] = p.score;
+        playerState["player_state"]=p.state;
         if (p.snake != nullptr) {
             playerState["snake_body"] = p.snake->getBody();
         }
@@ -114,6 +140,21 @@ void Room::removePlayer(int playerId) {
     );
     // 可选：打印日志
     std::cout << "Player " << playerId << " removed from room " << id << "." << std::endl;
+}
+
+void Room:: handlePlayerDeath(Player& player)
+{
+    if(player.state==PlayerState::alive)
+    {
+        player.state=PlayerState::dead;
+        player.respawnTimer=5;
+        player.score/=2;
+    }
+
+}
+
+std::pair<int,int> Room::findSafeSpawnPosition(){
+    return std::make_pair(width/2,height/2);
 }
 Room::~Room() {
     // 析构函数
