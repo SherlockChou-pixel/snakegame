@@ -1,27 +1,51 @@
 #include "RoomManager.h"
 #include "../game/Room.h"      // 在 .cpp 中包含，以获得 Room 的完整定义
 #include "../game/Snake.h"     // 在 .cpp 中包含，以获得 Snake 的完整定义
-#include <nlohmann/json.hpp>
+
 RoomManager::RoomManager(INetworkSender& sender) : networkSenderRef(sender) {
-    gameLoopRunning.store(true);
-    gameLoopTread = std::thread(&RoomManager::runGameLoop, this);
+
+}
+void RoomManager:: joinRoom(int client_fd)
+{
+    for(auto& [roomid,room]:activeRooms)
+    {
+        if(!room->isRoomFull())
+        {
+            Player player;
+            player.id=client_fd;
+            player.score=0;
+            nlohmann::json j=room->playerToJson(player);
+            j["room_id"]=roomid;
+            room->add_player(std::move(player));
+            std::cout<<"新玩家已加入房间"<<std::endl;
+            std::string successMsg = Protocol::build_response(1,j);
+            std::cout<<"发送消息"<<successMsg<<std::endl;
+            networkSenderRef.sendToClient(client_fd, successMsg);
+
+            auto all_players=room->getPlayerInfo();
+            nlohmann::json msg_for_existing_players;
+            msg_for_existing_players["players"]=all_players;
+            for(auto& player:room->getPlayers())
+            {
+                networkSenderRef.sendToClient(player.id, Protocol::build_response(6, msg_for_existing_players));
+            }
+            return;
+        }
+    }
+    std::cout<<"没有可用房间，创建新房间"<<std::endl;
+    creatRoom(client_fd);
 }
 void RoomManager::creatRoom(int client_fd)
 {
     std::string newRoomid="Room"+std::to_string(roomid++);
     Player player;
     player.id=client_fd;
-    player.snake = std::make_unique<Snake>(0,0,3,Direction::left,std::make_pair(25, 25)); 
     player.score=0;
-    player.state=PlayerState::alive;
-    nlohmann::json j;
-    j["room_id"]=newRoomid;
-    j["id"]=player.id;
-    j["player_state"]=player.state;
-    if (player.snake != nullptr)
-        j["snake"]=player.snake->getBody();
-    j["score"]=player.score;
     auto room=std::make_unique<Room>(newRoomid);
+
+    nlohmann::json j=room->playerToJson(player);
+    j["room_id"]=newRoomid;
+    
     room->add_player(std::move(player));
 
     activeRooms[newRoomid]=std::move(room);
@@ -36,6 +60,18 @@ void RoomManager::startGame(const std::string& roomid)
 {
     if(activeRooms.find(roomid)!=activeRooms.end())
     {
+        auto& players=activeRooms[roomid]->getPlayers();
+        int startX=0,startY=0;
+        for(auto& player:players)
+        {
+           if(player.snake==nullptr)
+           {
+                player.snake = new Snake(startX, startY, 3, Direction::left, std::make_pair(25, 25));
+                player.state = PlayerState::alive;
+           }
+           startX+=4;
+           startY+=4;
+        }
         std::vector<std::pair<int,std::string>>msg=activeRooms[roomid]->startGame();
         for(const auto&[fd,s]:msg)
         {
@@ -61,6 +97,15 @@ void RoomManager::runGameLoop(){
     }
 
     std::cout<<"游戏结束"<<std::endl;
+}
+
+void RoomManager::startGameLoop()
+{
+    if(!gameLoopTread.joinable())
+    {
+        gameLoopRunning.store(true);
+        gameLoopTread = std::thread(&RoomManager::runGameLoop, this);
+    }
 }
 /*更新所有房间游戏状态*/
 void RoomManager::updateAllRooms(){
@@ -108,10 +153,18 @@ void RoomManager::handlePlayerDisconnect(int client_fd){
     {
         
         room->removePlayer(client_fd);
+        auto all_players=room->getPlayerInfo();
+        nlohmann::json msg_for_existing_players;
+        msg_for_existing_players["players"]=all_players;
+        for(auto& player:room->getPlayers())
+        {
+            networkSenderRef.sendToClient(player.id, Protocol::build_response(6, msg_for_existing_players));
+        }
         break;
     }
 
 }
+
 RoomManager::~RoomManager(){
 
     gameLoopRunning.store(false);

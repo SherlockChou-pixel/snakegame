@@ -8,6 +8,7 @@
 #include <thread>
 #include <atomic>
 #include "../game/Player.h"
+#include <nlohmann/json.hpp>
 class Room; // 前向声明
 class Snake; // 前向声明
 
@@ -21,14 +22,17 @@ private:
     std::thread gameLoopTread;
     std::atomic<bool> gameLoopRunning;
 public:
+
+    void joinRoom(int client_fd);
     void creatRoom(int client_fd);
     void startGame(const std::string&);
     void runGameLoop();
+    void startGameLoop();
     void updateAllRooms();
     explicit RoomManager(INetworkSender& sender);
 
     void changePlayerDirection(const std::string& room_id, int player_id, Direction dir);
-
+    
     /*玩家离开*/
     void handlePlayerDisconnect(int client_fd);
     ~RoomManager();

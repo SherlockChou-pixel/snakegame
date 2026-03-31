@@ -2,7 +2,7 @@
 #include "Snake.h" // 为了创建 Snake
 #include <nlohmann/json.hpp>
 #include "../protocol/Protocol.h" 
-#include <nlohmann/json.hpp>
+
 Room::Room(const std::string& id): id(id){
     food=std::make_unique<Food>(width,height);
     
@@ -37,14 +37,24 @@ std::vector<std::pair<int,std::string>> Room::startGame()
     foodjson["x"]=x;
     foodjson["y"]=y;
     j["food"]=foodjson;
-    for(const auto &play:players)
+    for(auto &play:players)
     {
+        j["player"]=playerToJson(play);
         std::string str=Protocol::build_response(2,j);
         messagesToSend.push_back({play.id,str});
     }
     return messagesToSend;
         
 
+}
+std::vector<nlohmann::json> Room::getPlayerInfo() 
+{
+    std::vector<nlohmann::json> playerInfo;
+    for(auto &player:players)
+    {
+        playerInfo.push_back(playerToJson(player));
+    }
+    return playerInfo;
 }
 std::string Room::updateGameState()
 {
@@ -56,7 +66,7 @@ std::string Room::updateGameState()
             if (player.respawnTimer > 0) {
                 player.respawnTimer--;
             } else {
-                Snake* snake = player.snake.get(); 
+                Snake* snake = player.snake; 
                 std::pair<int, int> safePosition = findSafeSpawnPosition();
                 
                     snake->resetToInitialPos(safePosition.first,safePosition.second,Direction::right); 
@@ -85,7 +95,7 @@ std::string Room::updateGameState()
 
         for (auto& player : players) {
             if (player.state == PlayerState::alive) { // 只检查存活的玩家
-                Snake* snake = player.snake.get();
+                Snake* snake = player.snake;
                 if (snake->checkSelfCollision()) {
                     handlePlayerDeath(player);
                 }
@@ -156,7 +166,32 @@ void Room:: handlePlayerDeath(Player& player)
 std::pair<int,int> Room::findSafeSpawnPosition(){
     return std::make_pair(width/2,height/2);
 }
+
+nlohmann::json Room::playerToJson(Player& player){
+    nlohmann::json j;
+    j["id"]=player.id;
+    j["player_state"]=player.state;
+    j["score"]=player.score;
+
+    // 如果蛇不为空，则序列化其身体
+    if (player.snake != nullptr) {
+        j["snake"] = player.snake->getBody(); 
+    } else {
+        j["snake"] = nlohmann::json::array(); // 如果蛇为空，可以发送一个空数组或其他标识
+    }
+    return j;
+}
 Room::~Room() {
+
+    for(auto &player:players)
+    {
+        //释放蛇内存
+        if(player.snake!=nullptr)
+        {
+            delete player.snake;
+            player.snake=nullptr;
+        }
+    }
     // 析构函数
     std::cout<<"房间炸了"<<std::endl;
 }

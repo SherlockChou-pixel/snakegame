@@ -11,6 +11,7 @@ enum {
     CMD_MOVE=3, //移动指令
     CMD_UPDATE=4,  //更新指令
     CMD_DEAD=5, //死亡指令
+    CMD_ALL_PLAYERS=6, //所有玩家信息
     CMD_UNKNOWN = 99  // 未知命令
 };
 

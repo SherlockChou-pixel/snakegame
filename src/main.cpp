@@ -39,11 +39,11 @@ int main() {
         auto networkAdapter = std::make_unique<NetworkSenderAdapter>(server.get());
 
         auto roomManager = std::make_unique<RoomManager>(*networkAdapter);
-
         auto gameHandler = std::make_unique<GameHandler>(*roomManager);
 
         server->setMessageHandler(std::move(gameHandler));
         server->set_listen(10);
+        roomManager->startGameLoop();
 
         // 5. 启动键盘监听线程 (用于优雅退出)
         std::atomic<bool> quit_flag(false);

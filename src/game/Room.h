@@ -9,6 +9,7 @@
 class Snake; 
 #include "Food.h" // 如果 Food 类没有循环依赖，可以保留，否则也建议前向声明
 #include "../game/Map.h" 
+#include <nlohmann/json.hpp>
 /*用于管理玩家，蛇和食物的交互等逻辑*/
 class Room
 {
@@ -35,7 +36,7 @@ public:
     void setRunning(bool status){isRunningGame=status;}
     std::string updateGameState();
 
-    const std::vector<Player>& getPlayers() const { return players; }
+    std::vector<Player>& getPlayers()  { return players; }
     /*处理玩家输入*/
     void handlePlayerInput(int player_id, Direction new_dir);
     /*处理玩家死亡*/
@@ -43,6 +44,13 @@ public:
     std::pair<int,int> findSafeSpawnPosition();
     /*判断房间有没有空*/
     bool isRoomEmpty() const{return players.empty();}
+    /*判断是否人满*/
+    bool isRoomFull() const{return players.size()>=max_size;}
+    /* 返回当前房间人数*/
+    int getPlayerCount() const{return players.size();}
+    /*返回所有玩家信息*/
+    std::vector<nlohmann::json> getPlayerInfo();
+    nlohmann::json playerToJson(Player& player);
     void removePlayer(int playerId);
     ~Room();
 };
