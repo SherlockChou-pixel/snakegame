@@ -1,10 +1,11 @@
 cmake_minimum_required(VERSION 3.10)
 project(SnakeServer)
-
+set(CMAKE_BUILD_TYPE "Debug")
 # 设置 C++ 标准
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+# g++ -g -O0 -pthread ...
 # 添加可执行文件
 # 假设你的主函数在 src/main.cpp 中，如果不在，请修改下面的文件名
 add_executable(ServerTest 
@@ -17,6 +18,7 @@ add_executable(ServerTest
     src/server/NetworkSenderAdapter.cpp
     src/server/RoomManager.cpp
     src/utils/ThreadPool.cpp
+    src/utils/ThreadPoolManager.cpp
     # 如果有其他 cpp 文件，继续加在这里
 )
 

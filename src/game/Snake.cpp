@@ -91,6 +91,7 @@ void Snake::move()
 }
 
 std::pair<int,int> Snake::getHeadPos() const {
+    if(this==nullptr) return {};
     if (body_.empty()) return {-1, -1};
     return body_.front();
 }

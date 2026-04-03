@@ -50,7 +50,11 @@ public:
     int getPlayerCount() const{return players.size();}
     /*返回所有玩家信息*/
     std::vector<nlohmann::json> getPlayerInfo();
+    /*碰撞检测*/
+    bool checkSnakeCollisionWithOther(const Snake* snake,const Snake* otherSnake);
+    bool checkSnakeCollisionWithOtherPlayers(const Player& currentPlayer);
     nlohmann::json playerToJson(Player& player);
+    /* */
     void removePlayer(int playerId);
     ~Room();
 };

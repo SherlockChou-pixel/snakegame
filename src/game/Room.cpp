@@ -21,6 +21,7 @@ void Room::setMap(GameMap*map){
 }
 bool Room::add_player(Player&& player){
     if(players.size()>=max_size) return false;
+    
     players.emplace_back(std::move(player));
     return true;
 }
@@ -68,11 +69,14 @@ std::string Room::updateGameState()
             } else {
                 Snake* snake = player.snake; 
                 std::pair<int, int> safePosition = findSafeSpawnPosition();
-                
+                if(snake!=nullptr)
+                {
                     snake->resetToInitialPos(safePosition.first,safePosition.second,Direction::right); 
                     player.state = PlayerState::alive;
                     std::cout << "Player " << player.id << " has respawned at position (" 
                               << safePosition.first << ", " << safePosition.second << ")." << std::endl;
+                }
+
                 
             }
         }
@@ -103,7 +107,14 @@ std::string Room::updateGameState()
     }
             
     } 
-
+    for (auto& player : players) {
+        if (player.state == PlayerState::alive && player.snake != nullptr) {
+            // 检查与其他玩家的碰撞
+            if (checkSnakeCollisionWithOtherPlayers(player)) {
+                handlePlayerDeath(player);
+            }
+        }
+    }
     nlohmann::json gameStateJson;
     gameStateJson["type"] = "game_state_update";
     gameStateJson["room_id"] = id;
@@ -164,7 +175,57 @@ void Room:: handlePlayerDeath(Player& player)
 }
 
 std::pair<int,int> Room::findSafeSpawnPosition(){
-    return std::make_pair(width/2,height/2);
+        // 使用哈希集合记录被占用的位置
+    std::unordered_set<long long> occupiedPositions;
+    
+    // 记录所有存活蛇的身体位置
+    for(const auto& player : players) {
+        if(player.snake != nullptr && player.state == PlayerState::alive) {
+            const auto& body = player.snake->getBody();
+            for(const auto& pos : body) {
+                if(pos.first >= 0 && pos.first < width && pos.second >= 0 && pos.second < height) {
+                    long long encoded = ((long long)pos.first << 32) | pos.second;
+                    occupiedPositions.insert(encoded);
+                }
+            }
+        }
+    }
+    
+    // 首先尝试预定义的安全位置
+    std::vector<std::pair<int, int>> preferredPositions = {
+        {2, 2},           // 左上角
+        {width-3, 2},     // 右上角  
+        {2, height-3},    // 左下角
+        {width-3, height-3}, // 右下角
+        {width/2, 2},     // 上边缘中点
+        {width/2, height-3}, // 下边缘中点
+        {2, height/2},    // 左边缘中点
+        {width-3, height/2}  // 右边缘中点
+    };
+    
+    // 尝试预定义位置
+    for(const auto& pos : preferredPositions) {
+        if(pos.first >= 0 && pos.first < width && pos.second >= 0 && pos.second < height) {
+            long long encoded = ((long long)pos.first << 32) | pos.second;
+            if(occupiedPositions.find(encoded) == occupiedPositions.end()) {
+                return pos; // 找到安全位置
+            }
+        }
+    }
+    
+    // 如果预定义位置都不可用，在地图上随机找
+    for(int attempts = 0; attempts < width * height; attempts++) {
+        int x = rand() % width;
+        int y = rand() % height;
+        long long encoded = ((long long)x << 32) | y;
+        
+        if(occupiedPositions.find(encoded) == occupiedPositions.end()) {
+            return {x, y};
+        }
+    }
+    
+    // 极端情况：返回中心位置
+    return {width/2, height/2};
 }
 
 nlohmann::json Room::playerToJson(Player& player){
@@ -180,6 +241,39 @@ nlohmann::json Room::playerToJson(Player& player){
         j["snake"] = nlohmann::json::array(); // 如果蛇为空，可以发送一个空数组或其他标识
     }
     return j;
+}
+
+bool Room::checkSnakeCollisionWithOther(const Snake* snake,const Snake* otherSnake){
+    if(snake == nullptr || otherSnake == nullptr) {
+        return false;  // 如果任一蛇为空，不能发生碰撞
+    }
+    auto head_pos =snake->getHeadPos();
+    auto body=otherSnake->getBody();
+    for(size_t i=0;i<body.size();i++)
+    {
+        if(body[i]==head_pos)
+            return true;
+    }
+    return false;
+}
+bool Room::checkSnakeCollisionWithOtherPlayers(const Player& currentPlayer)
+{
+    if(currentPlayer.snake==nullptr||currentPlayer.state!=PlayerState::alive)
+        return false;
+    auto currPos=currentPlayer.snake->getHeadPos();
+    for(const auto& otherPlayer:players)
+    {
+        if(otherPlayer.id==currentPlayer.id)
+            continue;
+        if(otherPlayer.snake!=nullptr&&otherPlayer.state==PlayerState::alive)
+        {
+            return checkSnakeCollisionWithOther(currentPlayer.snake,otherPlayer.snake);
+        }
+        auto otherHeadPos=otherPlayer.snake->getHeadPos();
+        if(currPos==otherHeadPos)
+            return true;
+    }
+    return false;
 }
 Room::~Room() {
 
