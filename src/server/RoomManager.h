@@ -9,6 +9,8 @@
 #include <atomic>
 #include "../game/Player.h"
 #include <nlohmann/json.hpp>
+#include "MessageQueue.h"
+class GameHandler;
 class Room; // 前向声明
 class Snake; // 前向声明
 
@@ -21,6 +23,8 @@ private:
     //游戏循环
     std::thread gameLoopTread;
     std::atomic<bool> gameLoopRunning;
+
+    GameHandler* gameHandler;
 public:
 
     void joinRoom(int client_fd);

@@ -1,9 +1,10 @@
 #include "RoomManager.h"
 #include "../game/Room.h"      // 在 .cpp 中包含，以获得 Room 的完整定义
 #include "../game/Snake.h"     // 在 .cpp 中包含，以获得 Snake 的完整定义
-
+#include "GameHandler.h"
+#include "../utils/ThreadPoolManager.h"
 RoomManager::RoomManager(INetworkSender& sender) : networkSenderRef(sender) {
-
+    gameHandler = new GameHandler(*this);
 }
 void RoomManager:: joinRoom(int client_fd)
 {
@@ -86,6 +87,24 @@ void RoomManager::runGameLoop(){
     while(gameLoopRunning.load())
     {
         auto frameStartTime = std::chrono::steady_clock::now();
+
+
+        NetMessage msg;
+        while (MessageQueue::instance().pop(msg)) {
+            switch (msg.type) {
+                case MsgType::DATA:
+                    std::cout<<msg.data<<std::endl;
+                    gameHandler->onMessage(msg.client_fd, msg.data.c_str(), msg.data.size());
+
+                    break;
+                case MsgType::CONNECT:
+                    gameHandler->onConnect(msg.client_fd);
+                    break;
+                case MsgType::DISCONNECT:
+                    gameHandler->onDisconnect(msg.client_fd);
+                    break;
+            }
+        }
         updateAllRooms();
         auto frameEndTime = std::chrono::steady_clock::now();
         auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(frameEndTime - frameStartTime);
@@ -101,10 +120,12 @@ void RoomManager::runGameLoop(){
 
 void RoomManager::startGameLoop()
 {
-    if(!gameLoopTread.joinable())
+    if(!gameLoopRunning.load())
     {
         gameLoopRunning.store(true);
-        gameLoopTread = std::thread(&RoomManager::runGameLoop, this);
+        ThreadPoolManager::getInstance().getGameLogicPool().enqueue(std::bind(&RoomManager::runGameLoop, this));
+        // gameLoopTread = std::thread(&RoomManager::runGameLoop, this);
+        std::cout<<"游戏循环已提交至game_logic_pool_线程池"<<std::endl;
     }
 }
 /*更新所有房间游戏状态*/

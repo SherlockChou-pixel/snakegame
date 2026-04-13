@@ -7,7 +7,7 @@
 #include <cstring>
 #include <iostream>
 #include "IMessageHandler.h"
-
+#include "MessageQueue.h"
 EpollServer::EpollServer(int _port): port(_port), server_fd(-1), epoll_fd(-1), running(false) 
 ,messageHandler(nullptr){
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -59,7 +59,6 @@ void EpollServer::set_listen(int backlog) {
     }
     std::cout << "监听成功，backlog=" << backlog << std::endl;
 }
-// 🔑 新增：对外发送接口
 void EpollServer::sendToClient(int client_fd, const std::string& msg) {
     // 确保消息以 \n 结尾，方便客户端拆包
     std::string final_msg = msg;
@@ -117,21 +116,22 @@ void EpollServer::handle_client_event(int client_fd) {
             ctx->buffer.erase(0,pos+1);
             if(!line.empty())
             {
-                if(messageHandler!=nullptr)
-                    messageHandler->onMessage(client_fd, line.c_str(), line.length()); // 修改此处以符合接口
+                MessageQueue::instance().push(client_fd,line);
             }
         }
     }
 }
 void EpollServer::setMessageHandler(std::unique_ptr<IMessageHandler> handler) {
-    messageHandler = std::move(handler); // 👈 使用 std::move 转移所有权
+    messageHandler = std::move(handler); 
 }
 void EpollServer::close_client(int client_fd) {
     std::cout << "客户端断开 fd=" << client_fd << std::endl;
-    messageHandler->onDisconnect(client_fd);
+
+    MessageQueue::instance().push(client_fd, MsgType::DISCONNECT);
+
     epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_fd, nullptr);
     close(client_fd);
-    clients.erase(client_fd); // 🔑 清理上下文
+    clients.erase(client_fd); 
 }
 
 void EpollServer::run() {
@@ -213,10 +213,7 @@ void EpollServer::run() {
                     //初始化客户端上下文
                     clients[client]=std::make_shared<ClientContext>();
                     clients[client]->fd=client;
-                    if(messageHandler!=nullptr)
-                    {
-                        messageHandler->onConnect(client);  // 这个调用是正确的，因为我们已经添加了onConnect方法
-                    }
+                    MessageQueue::instance().push(client, MsgType::CONNECT);
                 }
             } else {
                 handle_client_event(events[i].data.fd);

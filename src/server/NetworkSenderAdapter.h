@@ -7,7 +7,7 @@
 #include <vector>
 #include <string>
 
-class NetworkSenderAdapter : public INetworkSender { // 继承自接口
+class NetworkSenderAdapter : public INetworkSender { 
 private:
     EpollServer* server;
 
